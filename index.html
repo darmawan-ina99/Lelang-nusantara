@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Pemberitahuan - Lelang Nusantara</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        /* ========== ROOT ========== */
+        :root {
+            --bg-dark: #0a1a0f;
+            --accent-red: #e63946;
+            --accent-gold: #d4a843;
+            --text-light: #f0efe9;
+            --text-muted: #b8c4b0;
+            --glass-bg: rgba(10, 26, 15, 0.75);
+            --glass-border: rgba(212, 168, 67, 0.20);
+        }
+
+        /* ========== RESET ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+        }
+
+        /* ========== LAYER 1: GAMBAR FULL SCREEN ========== */
+        .bg-image {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: var(--bg-dark);
+            /* fallback untuk letterbox */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bg-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            /* <-- kunci: tampilkan seluruh gambar */
+            object-position: center;
+            display: block;
+        }
+
+        /* ========== LAYER 2: OVERLAY RINGAN ========== */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            background:
+                radial-gradient(ellipse at center, transparent 45%, rgba(5, 12, 7, 0.45) 100%),
+                linear-gradient(to bottom, rgba(5, 12, 7, 0.15) 0%, rgba(5, 12, 7, 0.35) 100%);
+            pointer-events: none;
+        }
+
+        /* ========== LAYER 3: SCAN LINE (halus) ========== */
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            background: repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 0, 0, 0.02) 2px,
+                    rgba(0, 0, 0, 0.02) 4px);
+            pointer-events: none;
+        }
+
+        /* ========== LAYER 4: PANEL KETERANGAN ========== */
+        .notice-panel {
+            position: fixed;
+            z-index: 10;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            padding: 0;
+            transform: translateY(100%);
+            animation: slideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+            max-height: 60vh;
+            /* biar tidak terlalu tinggi di HP */
+            overflow-y: auto;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .notice-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 20px 28px;
+        }
+
+        /* HEADER */
+        .notice-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .notice-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-red), #c1121f);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 16px rgba(230, 57, 70, 0.35);
+            animation: iconPulse 2.5s ease-in-out infinite;
+        }
+
+        @keyframes iconPulse {
+            0%,
+            100% {
+                box-shadow: 0 4px 16px rgba(230, 57, 70, 0.35);
+            }
+            50% {
+                box-shadow: 0 4px 28px rgba(230, 57, 70, 0.65);
+            }
+        }
+
+        .notice-icon i {
+            color: #fff;
+            font-size: 18px;
+        }
+
+        .notice-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: clamp(16px, 2.8vw, 22px);
+            color: var(--text-light);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 10px;
+        }
+
+        .notice-title span {
+            color: var(--accent-gold);
+        }
+
+        .notice-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 6px;
+            background: rgba(230, 57, 70, 0.18);
+            border: 1px solid rgba(230, 57, 70, 0.35);
+            color: var(--accent-red);
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            animation: badgeBlink 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes badgeBlink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        /* DIVIDER */
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--glass-border), transparent);
+            margin-bottom: 14px;
+        }
+
+        /* BODY TEKS */
+        .notice-body {
+            color: var(--text-muted);
+            font-size: clamp(14px, 2.2vw, 16px);
+            font-weight: 400;
+            line-height: 1.8;
+            opacity: 0;
+            animation: fadeIn 0.5s ease 0.9s forwards;
+        }
+
+        .notice-body .salutation {
+            color: var(--text-light);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            font-size: clamp(15px, 2.4vw, 17px);
+        }
+
+        .notice-body .highlight {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        .notice-body .site-link {
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(212, 168, 67, 0.35);
+            transition: border-color 0.3s;
+            word-break: break-word;
+        }
+
+        .notice-body .site-link:hover {
+            border-color: var(--accent-gold);
+        }
+
+        .notice-body .closing {
+            display: block;
+            margin-top: 10px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* FOOTER PANEL */
+        .notice-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            opacity: 0;
+            animation: fadeIn 0.4s ease 1.2s forwards;
+        }
+
+        .notice-footer .timestamp {
+            font-size: 11px;
+            color: rgba(184, 196, 176, 0.5);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .notice-footer .timestamp i {
+            font-size: 12px;
+        }
+
+        .close-btn {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.10);
+            color: var(--text-light);
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: scale(1.04);
+        }
+
+        .close-btn:focus-visible {
+            outline: 2px solid var(--accent-gold);
+            outline-offset: 2px;
+        }
+
+        /* ========== TOP BAR ========== */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: linear-gradient(to bottom, rgba(5, 12, 7, 0.55) 0%, transparent 100%);
+            opacity: 0;
+            animation: fadeIn 0.5s ease 0.2s forwards;
+        }
+
+        .top-bar .logo {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 15px;
+            color: var(--text-light);
+            letter-spacing: 0.04em;
+        }
+
+        .top-bar .logo span {
+            color: var(--accent-gold);
+        }
+
+        .top-bar .status-dot {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .top-bar .status-dot::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes dotPulse {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.35;
+                transform: scale(0.75);
+            }
+        }
+
+        /* ========== PARTICLE CANVAS ========== */
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* ========== PANEL MINIMIZED ========== */
+        .notice-panel.minimized .notice-body,
+        .notice-panel.minimized .notice-footer,
+        .notice-panel.minimized .divider {
+            display: none;
+        }
+
+        .notice-panel.minimized .notice-inner {
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+
+        .notice-panel.minimized {
+            animation: none;
+            transform: translateY(0);
+            max-height: 60px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 640px) {
+            .notice-inner {
+                padding: 18px 16px 22px;
+            }
+
+            .notice-header {
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .notice-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 8px;
+            }
+
+            .notice-icon i {
+                font-size: 15px;
+            }
+
+            .notice-title {
+                font-size: clamp(15px, 4.2vw, 18px);
+            }
+
+            .notice-badge {
+                font-size: 9px;
+                padding: 1px 8px;
+                margin-left: 0;
+            }
+
+            .notice-body {
+                font-size: clamp(13px, 3.6vw, 15px);
+                line-height: 1.7;
+            }
+
+            .notice-body .salutation {
+                font-size: clamp(14px, 3.8vw, 16px);
+            }
+
+            .notice-footer {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+                margin-top: 12px;
+                padding-top: 10px;
+            }
+
+            .top-bar {
+                padding: 10px 14px;
+            }
+
+            .top-bar .logo {
+                font-size: 13px;
+            }
+
+            .top-bar .status-dot {
+                font-size: 9px;
+                gap: 5px;
+            }
+
+            .top-bar .status-dot::before {
+                width: 6px;
+                height: 6px;
+            }
+
+            /* Panel minimized di HP */
+            .notice-panel.minimized .notice-inner {
+                padding: 10px 16px;
+            }
+
+            .notice-panel.minimized {
+                max-height: 52px;
+            }
+
+            .notice-panel.minimized .notice-header {
+                margin-bottom: 0;
+            }
+
+            .notice-panel.minimized .notice-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .notice-panel.minimized .notice-icon i {
+                font-size: 12px;
+            }
+
+            .notice-panel.minimized .notice-title {
+                font-size: clamp(13px, 3.6vw, 15px);
+            }
+
+            .close-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 11px;
+            }
+        }
+
+        /* ========== REDUCED MOTION ========== */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* ========== SCROLLBAR PANEL ========== */
+        .notice-panel::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .notice-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .notice-panel::-webkit-scrollbar-thumb {
+            background: rgba(212, 168, 67, 0.25);
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== GAMBAR FULL SCREEN ===== -->
+    <div class="bg-image" role="img" aria-label="Poster pemberitahuan Lelang Nusantara">
+        <img src="https://z-cdn-media.chatglm.cn/files/7488ea57-6879-496c-b4ac-93c55ed6b071.png?auth_key=1884593297-c83962116d69421a93d9532487202f05-0-18cf7b1a8d64481cd159b8531d3a797d"
+        alt="Pemberitahuan Mitra Lelang Nusantara - Live Event 21 & 22 Juli Ditiadakan"
+        loading="eager"
+        decoding="async" />
+    </div>
+
+    <!-- ===== OVERLAY RINGAN ===== -->
+    <div class="overlay" aria-hidden="true"></div>
+
+    <!-- ===== SCAN LINES ===== -->
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <!-- ===== PARTIKEL ===== -->
+    <canvas id="particles" aria-hidden="true"></canvas>
+
+    <!-- ===== TOP BAR ===== -->
+    <header class="top-bar">
+        <div class="logo">LELANG<span>NUSANTARA</span></div>
+        <div class="status-dot">Gangguan Sistem</div>
+    </header>
+
+    <!-- ===== PANEL KETERANGAN ===== -->
+    <aside class="notice-panel" id="noticePanel" role="alert" aria-live="assertive">
+        <div class="notice-inner" id="noticeInner">
+            <div class="notice-header">
+                <div class="notice-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h1 class="notice-title">
+                    Pemberitahuan Mitra
+                    <span class="notice-badge">Gangguan</span>
+                </h1>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="notice-body">
+                <span class="salutation">Mitra yang terhormat,</span>
+                Kami mohon maaf. Sehubungan dengan adanya <span class="highlight">gangguan pada sistem pelayanan</span> di website
+                <a href="https://lelangnusantara.vercel.app" class="site-link" target="_blank" rel="noopener">lelangnusantara.vercel.app</a>
+                maka semua transaksi <span class="highlight">Pembayaran</span> dan <span class="highlight">pengambilan Unit dan BPKB</span> tidak dapat kami layani.
+                <span class="closing">Demikian pemberitahuan ini agar menjadi perhatian Mitra dan seluruh Stakeholder.</span>
+            </div>
+
+            <div class="notice-footer">
+                <div class="timestamp">
+                    <i class="far fa-clock"></i>
+                    <span id="currentTime"></span>
+                </div>
+                <button class="close-btn" id="closeBtn" aria-label="Kecilkan pemberitahuan" title="Kecilkan">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <script>
+        // ===== WAKTU REAL-TIME =====
+        function updateTime() {
+            const now = new Date();
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Asia/Jakarta'
+            };
+            const el = document.getElementById('currentTime');
+            if (el) el.textContent = now.toLocaleDateString('id-ID', options);
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // ===== TOGGLE PANEL (minimize / expand) =====
+        const panel = document.getElementById('noticePanel');
+        const closeBtn = document.getElementById('closeBtn');
+        const noticeInner = document.getElementById('noticeInner');
+        let isMinimized = false;
+
+        closeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            isMinimized = !isMinimized;
+            panel.classList.toggle('minimized', isMinimized);
+            closeBtn.querySelector('i').className = isMinimized ?
+                'fas fa-chevron-up' :
+                'fas fa-chevron-down';
+            closeBtn.setAttribute('aria-label', isMinimized ? 'Perluas pemberitahuan' : 'Kecilkan pemberitahuan');
+        });
+
+        noticeInner.addEventListener('click', function() {
+            if (isMinimized) {
+                isMinimized = false;
+                panel.classList.remove('minimized');
+                closeBtn.querySelector('i').className = 'fas fa-chevron-down';
+            }
+        });
+
+        // ===== PARTIKEL MENGAMBANG =====
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const PARTICLE_COUNT = 45;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.8 + 0.4;
+                this.speedX = (Math.random() - 0.5) * 0.25;
+                this.speedY = (Math.random() - 0.5) * 0.25 - 0.12;
+                this.opacity = Math.random() * 0.30 + 0.04;
+                this.life = Math.random() * 350 + 180;
+                this.maxLife = this.life;
+                const isGold = Math.random() > 0.55;
+                this.r = isGold ? 212 : 200;
+                this.g = isGold ? 168 : 210;
+                this.b = isGold ? 67 : 190;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.life--;
+                if (this.life <= 0 || this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas
+                    .height + 10) {
+                    this.reset();
+                }
+            }
+            draw() {
+                const fadeRatio = Math.min(this.life / this.maxLife, (this.maxLife - this.life) / 50);
+                const alpha = this.opacity * Math.max(0, Math.min(1, fadeRatio));
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, Math.max(0.1, this.size), 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + alpha + ')';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            if (prefersReducedMotion) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const p of particles) {
+                p.update();
+                p.draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // ===== ESCAPE =====
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && !isMinimized) {
+                closeBtn.click();
+            }
+        });
+    </script>
+</body>
+  </html>
