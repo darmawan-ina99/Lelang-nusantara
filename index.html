@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Pemberitahuan - Lelang Nusantara</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --bg-dark: #0a1a0f;
+            --accent-red: #e63946;
+            --accent-gold: #d4a843;
+            --text-light: #f0efe9;
+            --text-muted: #b8c4b0;
+            --glass-bg: rgba(10, 26, 15, 0.78);
+            --glass-border: rgba(212, 168, 67, 0.20);
+            --glass-border-s: rgba(212, 168, 67, 0.40);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+        }
+
+        .bg-image {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bg-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+            display: block;
+        }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2;
+            background: radial-gradient(ellipse at center, transparent 45%, rgba(5, 12, 7, 0.45) 100%), linear-gradient(to bottom, rgba(5, 12, 7, 0.15) 0%, rgba(5, 12, 7, 0.35) 100%);
+            pointer-events: none;
+        }
+        .scanlines {
+            position: fixed;
+            inset: 0;
+            z-index: 3;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.02) 2px, rgba(0, 0, 0, 0.02) 4px);
+            pointer-events: none;
+        }
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 15;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: linear-gradient(to bottom, rgba(5, 12, 7, 0.6) 0%, transparent 100%);
+            opacity: 0;
+            animation: fadeIn 0.5s ease 0.2s forwards;
+        }
+        .top-bar .logo {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 15px;
+            color: var(--text-light);
+            letter-spacing: 0.04em;
+        }
+        .top-bar .logo span {
+            color: var(--accent-gold);
+        }
+        .top-bar .status-dot {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent-red);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .top-bar .status-dot::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent-red);
+            animation: dotPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes dotPulse {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.35;
+                transform: scale(0.75);
+            }
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== PANEL UTAMA ===== */
+        .main-panel {
+            position: fixed;
+            z-index: 10;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            transform: translateY(100%);
+            animation: slideUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .main-panel.minimized .panel-body,
+        .main-panel.minimized .panel-footer {
+            display: none;
+        }
+        .main-panel.minimized .panel-inner {
+            padding: 12px 20px;
+            cursor: pointer;
+        }
+        .main-panel.minimized {
+            animation: none;
+            transform: translateY(0);
+            max-height: 58px;
+        }
+
+        .panel-inner {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 22px 20px 26px;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .panel-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .panel-icon.red {
+            background: linear-gradient(135deg, var(--accent-red), #c1121f);
+            box-shadow: 0 4px 16px rgba(230, 57, 70, 0.35);
+            animation: iconPulse 2.5s ease-in-out infinite;
+        }
+        .panel-icon.gold {
+            background: linear-gradient(135deg, var(--accent-gold), #b8923a);
+            box-shadow: 0 4px 16px rgba(212, 168, 67, 0.35);
+            animation: iconPulseGold 2.5s ease-in-out infinite;
+        }
+        @keyframes iconPulse {
+            0%,
+            100% {
+                box-shadow: 0 4px 16px rgba(230, 57, 70, 0.35);
+            }
+            50% {
+                box-shadow: 0 4px 28px rgba(230, 57, 70, 0.65);
+            }
+        }
+        @keyframes iconPulseGold {
+            0%,
+            100% {
+                box-shadow: 0 4px 16px rgba(212, 168, 67, 0.35);
+            }
+            50% {
+                box-shadow: 0 4px 28px rgba(212, 168, 67, 0.65);
+            }
+        }
+        .panel-icon i {
+            color: #fff;
+            font-size: 17px;
+        }
+
+        .panel-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: clamp(15px, 2.8vw, 21px);
+            color: var(--text-light);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 10px;
+        }
+        .notice-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 6px;
+            background: rgba(230, 57, 70, 0.18);
+            border: 1px solid rgba(230, 57, 70, 0.35);
+            color: var(--accent-red);
+            font-family: 'Inter', sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            animation: badgeBlink 2s ease-in-out infinite;
+            white-space: nowrap;
+        }
+        @keyframes badgeBlink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .divider {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--glass-border), transparent);
+            margin-bottom: 14px;
+        }
+        .panel-body {
+            opacity: 0;
+            animation: fadeIn 0.5s ease 0.9s forwards;
+        }
+
+        /* Notice body */
+        .notice-body {
+            color: var(--text-muted);
+            font-size: clamp(13px, 2.2vw, 15px);
+            font-weight: 400;
+            line-height: 1.8;
+        }
+        .notice-body .salutation {
+            color: var(--text-light);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 6px;
+            font-size: clamp(14px, 2.4vw, 16px);
+        }
+        .notice-body .highlight {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+        .notice-body .site-link {
+            color: var(--accent-gold);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(212, 168, 67, 0.35);
+            transition: border-color 0.3s;
+            word-break: break-word;
+        }
+        .notice-body .site-link:hover {
+            border-color: var(--accent-gold);
+        }
+        .notice-body .closing {
+            display: block;
+            margin-top: 10px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* Footer panel */
+        .panel-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            opacity: 0;
+            animation: fadeIn 0.4s ease 1.2s forwards;
+        }
+        .panel-footer .timestamp {
+            font-size: 11px;
+            color: rgba(184, 196, 176, 0.5);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .panel-footer .timestamp i {
+            font-size: 12px;
+        }
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-login-small {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-gold), #b8923a);
+            color: #0a1a0f;
+            font-weight: 700;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 2px 12px rgba(212, 168, 67, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-login-small:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 18px rgba(212, 168, 67, 0.45);
+        }
+        .btn-login-small:active {
+            transform: translateY(0);
+        }
+
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s ease;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.10);
+            color: var(--text-light);
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: scale(1.04);
+        }
+
+        /* ===== CONTENT TRANSITION ===== */
+        .content-notice,
+        .content-refund {
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .content-notice.leaving {
+            opacity: 0;
+            transform: translateY(-12px);
+            pointer-events: none;
+            position: absolute;
+            visibility: hidden;
+        }
+        .content-refund {
+            display: none;
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        .content-refund.entering {
+            display: block;
+            animation: refundIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes refundIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== REFUND CONTENT ===== */
+        .refund-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .refund-section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--glass-border-s), transparent);
+        }
+
+        .refund-card {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 0;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+        .refund-card .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: clamp(12px, 1.8vw, 14px);
+            transition: background 0.2s;
+        }
+        .refund-card .row:last-child {
+            border-bottom: none;
+        }
+        .refund-card .row:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .refund-card .label {
+            color: var(--text-muted);
+            font-weight: 400;
+            white-space: nowrap;
+            padding-right: 14px;
+        }
+        .refund-card .value {
+            color: var(--text-light);
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+        .refund-card .value.gold {
+            color: var(--accent-gold);
+        }
+        .refund-card .value.status {
+            color: #f1c40f;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+        .refund-card .value.status i {
+            font-size: 13px;
+        }
+        .refund-card .value .verified-badge {
+            color: #27ae60;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(39, 174, 96, 0.12);
+            padding: 2px 10px 2px 8px;
+            border-radius: 20px;
+            border: 1px solid rgba(39, 174, 96, 0.20);
+            margin-left: 4px;
+            white-space: nowrap;
+        }
+        .refund-card .value .verified-badge i {
+            font-size: 11px;
+            color: #27ae60;
+        }
+        .refund-card.hl-card {
+            border-color: rgba(212, 168, 67, 0.18);
+            background: rgba(212, 168, 67, 0.03);
+        }
+
+        /* Status message pengganti tombol */
+        .refund-status-message {
+            background: rgba(212, 168, 67, 0.06);
+            border: 1px solid rgba(212, 168, 67, 0.18);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 2px;
+            color: var(--text-light);
+            font-size: clamp(13px, 2vw, 15px);
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        .refund-status-message .status-icon {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(212, 168, 67, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            color: var(--accent-gold);
+            animation: spinPulse 2s ease-in-out infinite;
+        }
+        @keyframes spinPulse {
+            0%,
+            100% {
+                transform: rotate(0deg) scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: rotate(180deg) scale(1.1);
+                opacity: 1;
+            }
+        }
+        .refund-status-message .msg-text {
+            flex: 1;
+        }
+        .refund-status-message .msg-text small {
+            display: block;
+            font-weight: 400;
+            color: var(--text-muted);
+            font-size: clamp(11px, 1.5vw, 13px);
+            margin-top: 2px;
+        }
+
+        /* ===== MODAL LOGIN ===== */
+        .login-modal-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 40;
+            background: rgba(3, 8, 5, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        .login-modal-bg.show {
+            display: flex;
+            animation: fadeIn 0.25s ease;
+        }
+        .login-modal {
+            background: linear-gradient(160deg, rgba(10, 26, 15, 0.96), rgba(5, 14, 8, 0.98));
+            border: 1px solid var(--glass-border-s);
+            border-radius: 20px;
+            padding: 32px 28px 28px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 40px rgba(212, 168, 67, 0.04);
+            animation: modalIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .login-modal .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            font-size: 20px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .login-modal .modal-sub {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 22px;
+            opacity: 0.7;
+        }
+        .login-modal .form-group {
+            margin-bottom: 14px;
+        }
+        .login-modal label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrap i.field-icon {
+            position: absolute;
+            left: 13px;
+            color: rgba(184, 196, 176, 0.3);
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+        .input-wrap:focus-within i.field-icon {
+            color: var(--accent-gold);
+        }
+        .login-modal input {
+            width: 100%;
+            padding: 12px 14px 12px 40px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-light);
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            transition: border 0.3s, background 0.3s, box-shadow 0.3s;
+        }
+        .login-modal input::placeholder {
+            color: rgba(184, 196, 176, 0.25);
+        }
+        .login-modal input:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.10);
+        }
+        .toggle-pass {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            color: rgba(184, 196, 176, 0.35);
+            cursor: pointer;
+            font-size: 13px;
+            padding: 4px;
+            transition: color 0.3s;
+        }
+        .toggle-pass:hover {
+            color: var(--text-muted);
+        }
+        .btn-modal-login {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent-gold), #b8923a);
+            color: #0a1a0f;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 18px rgba(212, 168, 67, 0.25);
+            margin-top: 6px;
+            font-family: 'Inter', sans-serif;
+            letter-spacing: 0.02em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-modal-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(212, 168, 67, 0.45);
+        }
+        .btn-modal-login:active {
+            transform: translateY(0);
+        }
+        .modal-error {
+            color: var(--accent-red);
+            font-size: 12px;
+            margin-top: 10px;
+            display: none;
+            text-align: center;
+            padding: 8px;
+            background: rgba(230, 57, 70, 0.08);
+            border-radius: 8px;
+            border: 1px solid rgba(230, 57, 70, 0.15);
+        }
+        .modal-error i {
+            margin-right: 5px;
+        }
+        .btn-modal-close {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-modal-close:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-light);
+        }
+        @keyframes shake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-4px);
+            }
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(4px);
+            }
+        }
+        .shake {
+            animation: shake 0.45s ease;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        .main-panel::-webkit-scrollbar {
+            width: 3px;
+        }
+        .main-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .main-panel::-webkit-scrollbar-thumb {
+            background: rgba(212, 168, 67, 0.2);
+            border-radius: 6px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 640px) {
+            .panel-inner {
+                padding: 16px 16px 20px;
+            }
+            .panel-icon {
+                width: 32px;
+                height: 32px;
+            }
+            .panel-icon i {
+                font-size: 14px;
+            }
+            .panel-title {
+                font-size: clamp(14px, 4vw, 17px);
+            }
+            .notice-badge {
+                font-size: 9px;
+                padding: 1px 7px;
+            }
+            .notice-body {
+                font-size: clamp(12px, 3.4vw, 14px);
+            }
+            .panel-footer {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+                margin-top: 10px;
+                padding-top: 8px;
+            }
+            .footer-right {
+                justify-content: flex-end;
+            }
+            .refund-card .row {
+                padding: 8px 14px;
+                font-size: 12px;
+                flex-wrap: wrap;
+                gap: 3px;
+            }
+            .refund-card .value {
+                max-width: 100%;
+                text-align: left;
+            }
+            .refund-card .value.status {
+                justify-content: flex-start;
+            }
+            .refund-status-message {
+                flex-direction: column;
+                text-align: center;
+                padding: 14px 16px;
+            }
+            .refund-status-message .status-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            .login-modal {
+                padding: 26px 20px 22px;
+            }
+            .top-bar {
+                padding: 10px 14px;
+            }
+            .top-bar .logo {
+                font-size: 13px;
+            }
+            .top-bar .status-dot {
+                font-size: 9px;
+            }
+            .main-panel.minimized .panel-inner {
+                padding: 10px 16px;
+            }
+            .main-panel.minimized {
+                max-height: 50px;
+            }
+            .close-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 11px;
+            }
+            .refund-card .value .verified-badge {
+                font-size: 10px;
+                padding: 1px 8px 1px 6px;
+                margin-left: 2px;
+            }
+            .refund-card .value .verified-badge i {
+                font-size: 10px;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-image" role="img" aria-label="Poster pemberitahuan Lelang Nusantara">
+        <img src="https://z-cdn-media.chatglm.cn/files/7488ea57-6879-496c-b4ac-93c55ed6b071.png?auth_key=1884593297-c83962116d69421a93d9532487202f05-0-18cf7b1a8d64481cd159b8531d3a797d" alt="Pemberitahuan Mitra Lelang Nusantara" loading="eager" decoding="async" />
+    </div>
+    <div class="overlay" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <canvas id="particles" aria-hidden="true"></canvas>
+
+    <header class="top-bar">
+        <div class="logo">LELANG<span>NUSANTARA</span></div>
+        <div class="status-dot">Gangguan Sistem</div>
+    </header>
+
+    <!-- ===== PANEL UTAMA ===== -->
+    <aside class="main-panel" id="mainPanel" role="alert" aria-live="assertive">
+        <div class="panel-inner" id="panelInner">
+
+            <!-- ===== KONTEN: PEMBERITAHUAN ===== -->
+            <div class="content-notice" id="contentNotice">
+                <div class="panel-header">
+                    <div class="panel-icon red"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h1 class="panel-title">Pemberitahuan Mitra <span class="notice-badge">Gangguan</span></h1>
+                </div>
+                <div class="divider"></div>
+                <div class="panel-body notice-body">
+                    <span class="salutation">Mitra yang terhormat,</span>
+                    Kami mohon maaf. Sehubungan dengan adanya <span class="highlight">gangguan pada sistem pelayanan</span> di website
+                    <a href="https://lelangnusantara.vercel.app" class="site-link" target="_blank" rel="noopener">lelangnusantara.vercel.app</a>
+                    maka semua transaksi <span class="highlight">Pembayaran</span> dan <span class="highlight">pengambilan Unit dan BPKB</span> tidak dapat kami layani.
+                    <span class="closing">Demikian pemberitahuan ini agar menjadi perhatian Mitra dan seluruh Stakeholder.</span>
+                </div>
+                <div class="panel-footer">
+                    <div class="timestamp"><i class="far fa-clock"></i><span id="currentTime"></span></div>
+                    <div class="footer-right">
+                        <button class="btn-login-small" id="btnOpenLogin"><i class="fas fa-right-to-bracket"></i> Login</button>
+                        <button class="close-btn" id="closeBtn" aria-label="Kecilkan pemberitahuan" title="Kecilkan"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== KONTEN: REFUND (setelah login) ===== -->
+            <div class="content-refund" id="contentRefund">
+                <div class="panel-header">
+                    <div class="panel-icon gold"><i class="fas fa-rotate-left"></i></div>
+                    <h1 class="panel-title">Pengajuan Refund Dana</h1>
+                </div>
+                <div class="divider"></div>
+                <div class="panel-body">
+                    <div class="refund-section-label">Detail Transaksi</div>
+                    <div class="refund-card">
+                        <div class="row"><span class="label">No. Invoice</span><span class="value gold">PAY_7171_1776948682</span></div>
+                        <div class="row">
+                            <span class="label">Status</span>
+                            <span class="value status"><i class="fas fa-spinner fa-spin"></i> Refund diproses</span>
+                        </div>
+                        <div class="row"><span class="label">Tanggal Transaksi</span><span class="value">20 Juli 2026, 12:30</span></div>
+                        <div class="row"><span class="label">Nama Lelang</span><span class="value" style="font-size:clamp(11px,1.5vw,13px);">Serang_Nasional/Motor/TB/109_20072026</span></div>
+                        <div class="row"><span class="label">Tanggal Lelang</span><span class="value">20 April 2026</span></div>
+                        <div class="row"><span class="label">Tipe Lelang</span><span class="value">Tertutup</span></div>
+                    </div>
+
+                    <div class="refund-section-label">Informasi Refund</div>
+                    <div class="refund-card hl-card">
+                        <div class="row">
+                            <span class="label">Nomor Rekening</span>
+                            <span class="value">
+                                1984984269
+                                <span class="verified-badge"><i class="fas fa-check-circle"></i> Terverifikasi</span>
+                            </span>
+                        </div>
+                        <div class="row"><span class="label">Nama VA</span><span class="value">NUS_JTA Nana Mardiana</span></div>
+                    </div>
+
+                    <!-- Pesan status pengganti tombol -->
+                    <div class="refund-status-message">
+                        <div class="status-icon"><i class="fas fa-clock"></i></div>
+                        <div class="msg-text">
+                            Pengembalian dana sedang diproses
+                            <small>Nomor rekening telah terverifikasi sesuai. Proses refund maksimal 7 hari kerja.</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-footer">
+                    <div class="timestamp"><i class="far fa-clock"></i><span id="currentTime2"></span></div>
+                    <div class="footer-right">
+                        <button class="close-btn" id="closeBtn2" aria-label="Kecilkan" title="Kecilkan"><i class="fas fa-chevron-down"></i></button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </aside>
+
+    <!-- ===== MODAL LOGIN ===== -->
+    <div class="login-modal-bg" id="loginModalBg">
+        <div class="login-modal" id="loginModal">
+            <div class="modal-title"><i class="fas fa-user-shield" style="color:var(--accent-gold);margin-right:8px;"></i>Login Mitra</div>
+            <div class="modal-sub">Masukkan kredensial untuk mengakses refund</div>
+            <form id="loginForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-user field-icon"></i>
+                        <input type="text" id="username" placeholder="Masukkan username" autocomplete="off" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock field-icon"></i>
+                        <input type="password" id="password" placeholder="Masukkan password" autocomplete="off" />
+                        <button type="button" class="toggle-pass" id="togglePass" aria-label="Tampilkan password"><i class="fas fa-eye"></i></button>
+                    </div>
+                </div>
+                <button type="submit" class="btn-modal-login"><i class="fas fa-arrow-right-to-bracket"></i> Masuk</button>
+                <div class="modal-error" id="modalError"><i class="fas fa-circle-exclamation"></i>Username atau password salah.</div>
+                <button type="button" class="btn-modal-close" id="modalClose">Batal</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* ===== WAKTU ===== */
+        function updateTime() {
+            var now = new Date();
+            var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
+                second: '2-digit', timeZone: 'Asia/Jakarta' };
+            var t = now.toLocaleDateString('id-ID', opts);
+            var e1 = document.getElementById('currentTime');
+            var e2 = document.getElementById('currentTime2');
+            if (e1) e1.textContent = t;
+            if (e2) e2.textContent = t;
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        /* ===== TOGGLE PANEL ===== */
+        var mainPanel = document.getElementById('mainPanel');
+        var panelInner = document.getElementById('panelInner');
+        var closeBtn = document.getElementById('closeBtn');
+        var closeBtn2 = document.getElementById('closeBtn2');
+        var isMinimized = false;
+
+        function toggleMinimize(btn) {
+            isMinimized = !isMinimized;
+            mainPanel.classList.toggle('minimized', isMinimized);
+            var ico = isMinimized ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+            btn.querySelector('i').className = ico;
+        }
+        closeBtn.addEventListener('click', function(e) { e.stopPropagation();
+            toggleMinimize(closeBtn); });
+        closeBtn2.addEventListener('click', function(e) { e.stopPropagation();
+            toggleMinimize(closeBtn2); });
+        panelInner.addEventListener('click', function() {
+            if (isMinimized) {
+                isMinimized = false;
+                mainPanel.classList.remove('minimized');
+                closeBtn.querySelector('i').className = 'fas fa-chevron-down';
+                if (closeBtn2) closeBtn2.querySelector('i').className = 'fas fa-chevron-down';
+            }
+        });
+
+        /* ===== MODAL LOGIN ===== */
+        var loginModalBg = document.getElementById('loginModalBg');
+        var loginModal = document.getElementById('loginModal');
+        var loginForm = document.getElementById('loginForm');
+        var modalError = document.getElementById('modalError');
+        var btnOpenLogin = document.getElementById('btnOpenLogin');
+        var modalClose = document.getElementById('modalClose');
+        var togglePass = document.getElementById('togglePass');
+        var passInput = document.getElementById('password');
+
+        btnOpenLogin.addEventListener('click', function() {
+            loginModalBg.classList.add('show');
+            setTimeout(function() { document.getElementById('username').focus(); }, 100);
+        });
+
+        modalClose.addEventListener('click', closeModal);
+        loginModalBg.addEventListener('click', function(e) { if (e.target === loginModalBg) closeModal(); });
+
+        function closeModal() {
+            loginModalBg.classList.remove('show');
+            modalError.style.display = 'none';
+            loginForm.reset();
+        }
+
+        togglePass.addEventListener('click', function() {
+            var show = passInput.type === 'password';
+            passInput.type = show ? 'text' : 'password';
+            togglePass.querySelector('i').className = show ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+
+        /* ===== LOGIN SUBMIT ===== */
+        var contentNotice = document.getElementById('contentNotice');
+        var contentRefund = document.getElementById('contentRefund');
+        var VALID_USER = 'nanamardiana';
+        var VALID_PASS = 'nana123';
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var u = document.getElementById('username').value.trim();
+            var p = document.getElementById('password').value.trim();
+            modalError.style.display = 'none';
+            loginModal.classList.remove('shake');
+
+            if (u === VALID_USER && p === VALID_PASS) {
+                /* Tutup modal */
+                loginModalBg.classList.remove('show');
+
+                /* Ganti konten panel */
+                contentNotice.classList.add('leaving');
+                setTimeout(function() {
+                    contentNotice.style.display = 'none';
+                    contentRefund.classList.add('entering');
+                    /* Pastikan panel terbuka jika sedang minimized */
+                    if (isMinimized) {
+                        isMinimized = false;
+                        mainPanel.classList.remove('minimized');
+                        closeBtn.querySelector('i').className = 'fas fa-chevron-down';
+                        if (closeBtn2) closeBtn2.querySelector('i').className = 'fas fa-chevron-down';
+                    }
+                }, 350);
+            } else {
+                modalError.style.display = 'block';
+                loginModal.classList.add('shake');
+                setTimeout(function() { loginModal.classList.remove('shake'); }, 450);
+            }
+        });
+
+        /* ===== PARTIKEL ===== */
+        var canvas = document.getElementById('particles');
+        var ctx = canvas.getContext('2d');
+        var particles = [];
+        var PCOUNT = 38;
+
+        function resizeCanvas() { canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight; }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        var prm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function Pt() { this.reset(); }
+        Pt.prototype.reset = function() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.sz = Math.random() * 1.5 + 0.4;
+            this.sx = (Math.random() - 0.5) * 0.22;
+            this.sy = (Math.random() - 0.5) * 0.22 - 0.10;
+            this.op = Math.random() * 0.22 + 0.04;
+            this.lf = Math.random() * 320 + 180;
+            this.ml = this.lf;
+            var g = Math.random() > 0.55;
+            this.r = g ? 212 : 185;
+            this.g = g ? 168 : 200;
+            this.b = g ? 67 : 180;
+        };
+        Pt.prototype.update = function() {
+            this.x += this.sx;
+            this.y += this.sy;
+            this.lf--;
+            if (this.lf <= 0 || this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10)
+                this.reset();
+        };
+        Pt.prototype.draw = function() {
+            var f = Math.min(this.lf / this.ml, (this.ml - this.lf) / 50);
+            var a = this.op * Math.max(0, Math.min(1, f));
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, Math.max(0.1, this.sz), 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + a + ')';
+            ctx.fill();
+        };
+
+        for (var i = 0; i < PCOUNT; i++) particles.push(new Pt());
+
+        function animP() {
+            if (prm) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (var j = 0; j < particles.length; j++) { particles[j].update();
+                particles[j].draw(); }
+            requestAnimationFrame(animP);
+        }
+        animP();
+
+        /* ===== KEYBOARD ===== */
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (loginModalBg.classList.contains('show')) { closeModal(); } else if (!isMinimized) {
+                    toggleMinimize(closeBtn2 || closeBtn);
+                }
+            }
+        });
+    </script>
+</body>
+  </html>
