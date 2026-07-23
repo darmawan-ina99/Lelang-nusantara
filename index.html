@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maintenance · Balai Lelang Nusantara</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --gold: #d4af37;
+            --gold-light: #f5e6b0;
+            --gold-dark: #b8932b;
+            --gold-glow: rgba(212, 175, 55, 0.25);
+            --bg-deep: #080707;
+            --bg-card: rgba(14, 12, 12, 0.6);
+            --text-primary: rgba(255, 245, 230, 0.92);
+            --text-secondary: rgba(255, 245, 230, 0.65);
+            --text-muted: rgba(255, 245, 230, 0.35);
+            --border-gold: rgba(212, 175, 55, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+        /* ======== LATAR BELAKANG BERLAPIS ======== */
+        .bg-base {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 25% 30%, rgba(212,175,55,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 80% at 75% 75%, rgba(180,140,30,0.04) 0%, transparent 60%),
+                linear-gradient(160deg, #0c0a09 0%, #12100e 40%, #0a0908 100%);
+        }
+
+        .bg-noise {
+            position: fixed; inset: 0; z-index: 1;
+            opacity: 0.025;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 200px 200px;
+        }
+
+        .bg-glow {
+            position: fixed; inset: 0; z-index: 1;
+            pointer-events: none;
+            animation: auraShift 12s ease-in-out infinite alternate;
+        }
+        .bg-glow::before,
+        .bg-glow::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+        }
+        .bg-glow::before {
+            width: 600px; height: 600px;
+            top: -10%; left: -5%;
+            background: radial-gradient(circle, rgba(212,175,55,0.07), transparent 70%);
+            animation: orbFloat1 16s ease-in-out infinite alternate;
+        }
+        .bg-glow::after {
+            width: 500px; height: 500px;
+            bottom: -15%; right: -5%;
+            background: radial-gradient(circle, rgba(180,140,30,0.05), transparent 70%);
+            animation: orbFloat2 20s ease-in-out infinite alternate;
+        }
+
+        @keyframes auraShift { 0%{opacity:.5} 100%{opacity:1} }
+        @keyframes orbFloat1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(60px,40px) scale(1.15)} }
+        @keyframes orbFloat2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-50px,-30px) scale(1.1)} }
+
+        /* ======== CANVAS PARTIKEL ======== */
+        #particles {
+            position: fixed; inset: 0; z-index: 2;
+            pointer-events: none;
+        }
+
+        /* ======== GARIS DEKORATIF SUDUT ======== */
+        .corner-lines {
+            position: fixed; z-index: 3; pointer-events: none;
+        }
+        .corner-lines.tl { top: 28px; left: 28px; }
+        .corner-lines.tr { top: 28px; right: 28px; transform: scaleX(-1); }
+        .corner-lines.bl { bottom: 28px; left: 28px; transform: scaleY(-1); }
+        .corner-lines.br { bottom: 28px; right: 28px; transform: scale(-1,-1); }
+        .corner-lines span {
+            display: block; background: linear-gradient(90deg, var(--gold), transparent);
+            border-radius: 2px;
+        }
+        .corner-lines span:nth-child(1) { width: 60px; height: 1px; opacity: 0.2; }
+        .corner-lines span:nth-child(2) {
+            width: 1px; height: 40px; margin-left: 0;
+            margin-top: -1px;
+            background: linear-gradient(180deg, var(--gold), transparent);
+        }
+
+        /* ======== KARTU UTAMA ======== */
+        .card-main {
+            position: relative; z-index: 10;
+            max-width: 720px; width: 100%;
+            background: var(--bg-card);
+            backdrop-filter: blur(24px) saturate(1.4);
+            -webkit-backdrop-filter: blur(24px) saturate(1.4);
+            border-radius: 2.8rem;
+            padding: 3.5rem 3rem 2.8rem;
+            text-align: center;
+            border: 1px solid var(--border-gold);
+            box-shadow:
+                0 40px 100px rgba(0,0,0,0.7),
+                0 0 0 1px rgba(212,175,55,0.08) inset,
+                0 1px 0 rgba(212,175,55,0.06) inset;
+            animation: cardReveal 1.4s cubic-bezier(0.16,1,0.3,1) forwards;
+            opacity: 0;
+            transform: translateY(40px) scale(0.96);
+        }
+
+        @keyframes cardReveal {
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Border animasi berputar */
+        .card-border-anim {
+            position: absolute; inset: -1px; z-index: -1;
+            border-radius: 2.8rem;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .card-border-anim::before {
+            content: '';
+            position: absolute; inset: -50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0%,
+                rgba(212,175,55,0.18) 8%,
+                transparent 16%,
+                transparent 50%,
+                rgba(212,175,55,0.12) 58%,
+                transparent 66%
+            );
+            animation: borderSpin 10s linear infinite;
+        }
+        .card-border-anim::after {
+            content: '';
+            position: absolute; inset: 1px;
+            border-radius: 2.8rem;
+            background: var(--bg-deep);
+        }
+
+        @keyframes borderSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mouse-follow glow */
+        .card-glow {
+            position: absolute; inset: 0; z-index: 1;
+            border-radius: 2.8rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            background: radial-gradient(
+                400px circle at var(--mx, 50%) var(--my, 50%),
+                rgba(212,175,55,0.07),
+                transparent 60%
+            );
+        }
+        .card-main:hover .card-glow { opacity: 1; }
+
+        /* Konten di atas glow */
+        .card-content { position: relative; z-index: 2; }
+
+        /* ======== ORNAMEN ATAS ======== */
+        .ornament {
+            display: flex; align-items: center; justify-content: center;
+            gap: 1rem; margin-bottom: 1.6rem;
+        }
+        .ornament .line {
+            flex: 1; max-width: 80px; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.35), transparent);
+        }
+        .ornament .diamond {
+            width: 8px; height: 8px;
+            background: var(--gold);
+            transform: rotate(45deg);
+            box-shadow: 0 0 12px var(--gold-glow);
+            animation: diamondPulse 3s ease-in-out infinite alternate;
+        }
+        @keyframes diamondPulse {
+            0% { box-shadow: 0 0 6px rgba(212,175,55,0.15); opacity:.6; }
+            100% { box-shadow: 0 0 20px rgba(212,175,55,0.5); opacity:1; }
+        }
+
+        /* ======== IKON ======== */
+        .icon-wrap {
+            position: relative; display: inline-block;
+            margin-bottom: 1rem;
+        }
+        .icon-ring {
+            position: absolute; inset: -18px;
+            border: 1px solid rgba(212,175,55,0.08);
+            border-radius: 50%;
+            animation: ringPulse 4s ease-in-out infinite;
+        }
+        .icon-ring:nth-child(2) {
+            inset: -30px;
+            border-color: rgba(212,175,55,0.04);
+            animation-delay: 1s;
+            animation-duration: 5s;
+        }
+        @keyframes ringPulse {
+            0%,100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.06); opacity: 0.4; }
+        }
+
+        .icon-jam {
+            font-size: 3.8rem; color: var(--gold);
+            display: inline-block;
+            filter: drop-shadow(0 0 28px rgba(212,175,55,0.2));
+            animation: iconBreathe 4s ease-in-out infinite;
+        }
+        @keyframes iconBreathe {
+            0%,100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(212,175,55,0.15)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 36px rgba(212,175,55,0.3)); }
+        }
+
+        .icon-dots {
+            position: absolute; inset: -44px; pointer-events: none;
+            animation: dotsRotate 30s linear infinite;
+        }
+        .icon-dots span {
+            position: absolute;
+            width: 3px; height: 3px;
+            background: var(--gold); border-radius: 50%;
+            opacity: 0.25;
+        }
+        .icon-dots span:nth-child(1) { top:0; left:50%; transform:translateX(-50%); opacity:.4; }
+        .icon-dots span:nth-child(2) { top:50%; right:0; transform:translateY(-50%); }
+        .icon-dots span:nth-child(3) { bottom:0; left:50%; transform:translateX(-50%); opacity:.35; }
+        .icon-dots span:nth-child(4) { top:50%; left:0; transform:translateY(-50%); }
+        .icon-dots span:nth-child(5) { top:14%; right:14%; width:2px; height:2px; }
+        .icon-dots span:nth-child(6) { bottom:14%; left:14%; width:2px; height:2px; opacity:.3; }
+
+        @keyframes dotsRotate { to { transform: rotate(360deg); } }
+
+        /* ======== JUDUL ======== */
+        .title-main {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 2.6rem;
+            letter-spacing: 0.03em;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(
+                135deg,
+                #faf0d4 0%, #e8c84a 25%, #d4af37 50%, #c49b2a 75%, #e8c84a 100%
+            );
+            background-size: 250% 250%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmerSlide 7s ease-in-out infinite;
+        }
+        @keyframes shimmerSlide {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .sub-brand {
+            font-family: 'Playfair Display', serif;
+            font-style: italic; font-weight: 400;
+            font-size: 0.95rem;
+            color: rgba(212,175,55,0.5);
+            letter-spacing: 0.25em;
+            margin-bottom: 2rem;
+            display: inline-block;
+            position: relative;
+            padding: 0 1rem;
+        }
+        .sub-brand::before,
+        .sub-brand::after {
+            content: '';
+            position: absolute; top: 50%;
+            width: 40px; height: 1px;
+        }
+        .sub-brand::before { right: 100%; background: linear-gradient(90deg, transparent, rgba(212,175,55,0.25)); }
+        .sub-brand::after  { left: 100%;  background: linear-gradient(270deg, transparent, rgba(212,175,55,0.25)); }
+
+        /* ======== PEMBERITAHUAN ======== */
+        .notice {
+            background: rgba(212,175,55,0.04);
+            border: 1px solid rgba(212,175,55,0.08);
+            border-radius: 1.2rem;
+            padding: 1.2rem 1.6rem;
+            margin-bottom: 1.8rem;
+        }
+        .notice-label {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 0.72rem; font-weight: 600;
+            color: var(--gold); letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 0.6rem;
+        }
+        .notice-label .dot-live {
+            width: 6px; height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: liveBlink 1.5s ease-in-out infinite;
+        }
+        @keyframes liveBlink {
+            0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(212,175,55,0.4); }
+            50% { opacity: 0.3; box-shadow: 0 0 8px 2px rgba(212,175,55,0.15); }
+        }
+        .notice-text {
+            color: var(--text-primary);
+            font-weight: 300; font-size: 1.08rem;
+            line-height: 1.7; letter-spacing: 0.01em;
+        }
+        .notice-text strong {
+            color: var(--gold-light); font-weight: 500;
+        }
+
+        /* ======== COUNTDOWN ======== */
+        .countdown-section { margin-bottom: 2rem; }
+        .countdown-label {
+            font-size: 0.72rem; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+        .countdown {
+            display: flex; align-items: center; justify-content: center;
+            gap: 0.6rem;
+        }
+        .cd-block {
+            background: rgba(212,175,55,0.05);
+            border: 1px solid rgba(212,175,55,0.1);
+            border-radius: 1rem;
+            padding: 0.8rem 0;
+            min-width: 72px;
+            backdrop-filter: blur(4px);
+            transition: border-color 0.3s;
+        }
+        .cd-block:hover { border-color: rgba(212,175,55,0.3); }
+        .cd-num {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem; font-weight: 700;
+            color: var(--gold);
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
+        .cd-unit {
+            font-size: 0.6rem; font-weight: 500;
+            color: var(--text-muted);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-top: 0.3rem;
+        }
+        .cd-sep {
+            font-size: 1.4rem; font-weight: 300;
+            color: rgba(212,175,55,0.3);
+            padding-bottom: 0.8rem;
+            animation: sepBlink 1.2s step-end infinite;
+        }
+        @keyframes sepBlink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+        .progress-wrap { margin-top: 1rem; padding: 0 0.5rem; }
+        .progress-bar {
+            width: 100%; height: 3px;
+            background: rgba(212,175,55,0.08);
+            border-radius: 4px; overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold), var(--gold-light));
+            border-radius: 4px;
+            transition: width 1s ease;
+            box-shadow: 0 0 12px rgba(212,175,55,0.3);
+        }
+
+        /* ======== PEMOHONAN MAAF ======== */
+        .apology {
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 0.02em;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            padding: 0 0.5rem;
+        }
+        .apology i {
+            color: var(--gold); margin-right: 6px; opacity: 0.5;
+        }
+
+        /* ======== PEMISAH ======== */
+        .divider {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.1), transparent);
+            margin-bottom: 1.6rem;
+        }
+
+        /* ======== BADGE & FOOTER ======== */
+        .badge-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 1rem; margin-bottom: 1.8rem;
+        }
+        .badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(212,175,55,0.05);
+            border: 1px solid rgba(212,175,55,0.08);
+            border-radius: 40px;
+            padding: 0.35rem 1.2rem;
+            font-size: 0.65rem; font-weight: 600;
+            color: var(--gold);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .badge i { font-size: 0.6rem; opacity: 0.7; }
+
+        .footer-note {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            letter-spacing: 0.18em;
+            font-weight: 300;
+        }
+        .footer-note i {
+            color: rgba(212,175,55,0.18); margin: 0 3px; font-size: 0.45rem;
+        }
+
+        /* ======== RESPONSIF ======== */
+        @media (max-width: 640px) {
+            .card-main { padding: 2.6rem 1.5rem 2rem; border-radius: 2rem; }
+            .card-border-anim, .card-border-anim::after { border-radius: 2rem; }
+            .title-main { font-size: 1.95rem; }
+            .sub-brand { font-size: 0.82rem; }
+            .icon-jam { font-size: 3rem; }
+            .cd-block { min-width: 58px; padding: 0.6rem 0; }
+            .cd-num { font-size: 1.4rem; }
+            .corner-lines { display: none; }
+            .badge-row { gap: 0.6rem; }
+        }
+        @media (max-width: 400px) {
+            .card-main { padding: 2rem 1.1rem 1.6rem; }
+            .title-main { font-size: 1.65rem; }
+            .cd-block { min-width: 50px; }
+            .cd-num { font-size: 1.2rem; }
+            .countdown { gap: 0.35rem; }
+            .badge-row { flex-wrap: wrap; }
+        }
+
+        /* ======== AKSESIBILITAS ======== */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Lapisan latar bersekuens -->
+    <div class="bg-base"></div>
+    <div class="bg-noise"></div>
+    <div class="bg-glow"></div>
+    <canvas id="particles"></canvas>
+
+    <!-- Garis dekoratif sudut -->
+    <div class="corner-lines tl"><span></span><span></span></div>
+    <div class="corner-lines tr"><span></span><span></span></div>
+    <div class="corner-lines bl"><span></span><span></span></div>
+    <div class="corner-lines br"><span></span><span></span></div>
+
+    <!-- Kartu utama -->
+    <main class="card-main" id="cardMain">
+        <div class="card-border-anim" aria-hidden="true"></div>
+        <div class="card-glow" aria-hidden="true"></div>
+
+        <div class="card-content">
+            <!-- Ornamen atas -->
+            <div class="ornament" aria-hidden="true">
+                <span class="line"></span>
+                <span class="diamond"></span>
+                <span class="line"></span>
+            </div>
+
+            <!-- Ikon dengan cincin & titik orbit -->
+            <div class="icon-wrap">
+                <div class="icon-ring" aria-hidden="true"></div>
+                <div class="icon-ring" aria-hidden="true"></div>
+                <div class="icon-dots" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <i class="fas fa-gavel icon-jam" aria-hidden="true"></i>
+            </div>
+
+            <!-- Judul & sub-brand -->
+            <h1 class="title-main">Balai Lelang Nusantara</h1>
+            <div class="sub-brand">House of Heritage</div>
+
+            <!-- Pemberitahuan -->
+            <div class="notice" role="status">
+                <div class="notice-label">
+                    <span class="dot-live"></span>
+                    Sedang Dalam Perbaikan
+                </div>
+                <p class="notice-text">
+                    Website kami sedang menjalani pemeliharaan sistem untuk memberikan
+                    pengalaman <strong>lebih baik</strong> bagi para Mitra Lelang tercinta.
+                </p>
+            </div>
+
+            <!-- Countdown timer -->
+            <div class="countdown-section">
+                <div class="countdown-label">Estimasi kembali online</div>
+                <div class="countdown" id="countdown" aria-label="Hitung mundur waktu maintenance">
+                    <div class="cd-block">
+                        <div class="cd-num" id="cdHours">00</div>
+                        <div class="cd-unit">Jam</div>
+                    </div>
+                    <span class="cd-sep" aria-hidden="true">:</span>
+                    <div class="cd-block">
+                        <div class="cd-num" id="cdMinutes">00</div>
+                        <div class="cd-unit">Menit</div>
+                    </div>
+                    <span class="cd-sep" aria-hidden="true">:</span>
+                    <div class="cd-block">
+                        <div class="cd-num" id="cdSeconds">00</div>
+                        <div class="cd-unit">Detik</div>
+                    </div>
+                </div>
+                <div class="progress-wrap">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Permohonan maaf -->
+            <p class="apology">
+                <i class="fas fa-hand-holding-heart"></i>
+                Kami mohon maaf atas ketidaknyamanan ini.
+                Layanan akan segera kembali normal.
+            </p>
+
+            <!-- Pemisah -->
+            <hr class="divider">
+
+            <!-- Badge -->
+            <div class="badge-row">
+                <span class="badge"><i class="fas fa-shield-halved"></i> Lelang Resmi</span>
+                <span class="badge"><i class="fas fa-certificate"></i> Terpercaya</span>
+                <span class="badge"><i class="fas fa-landmark"></i> BLN</span>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer-note">
+                <i class="fas fa-asterisk"></i>
+                Tim IT &middot; Balai Lelang Nusantara
+                <i class="fas fa-asterisk"></i>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        /* ======== COUNTDOWN TIMER ======== */
+        function getTarget() {
+            const now = new Date();
+            const target = new Date(now);
+            target.setHours(12, 0, 0, 0);
+            if (now >= target) target.setDate(target.getDate() + 1);
+            return target;
+        }
+
+        const TOTAL_DURATION = 6 * 60 * 60 * 1000;
+        const targetTime = getTarget();
+
+        function updateCountdown() {
+            const now = new Date();
+            let diff = targetTime - now;
+            if (diff < 0) diff = 0;
+
+            const hours   = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            document.getElementById('cdHours').textContent   = String(hours).padStart(2, '0');
+            document.getElementById('cdMinutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('cdSeconds').textContent = String(seconds).padStart(2, '0');
+
+            const elapsed = TOTAL_DURATION - diff;
+            const pct = Math.min(100, Math.max(0, (elapsed / TOTAL_DURATION) * 100));
+            document.getElementById('progressFill').style.width = pct + '%';
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        /* ======== MOUSE-FOLLOW GLOW ======== */
+        const card = document.getElementById('cardMain');
+        const glow = card.querySelector('.card-glow');
+
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            glow.style.setProperty('--mx', x + '%');
+            glow.style.setProperty('--my', y + '%');
+        });
+
+        /* ======== PARTIKEL CANVAS ======== */
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let W, H;
+
+        function resize() {
+            W = canvas.width  = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const PARTICLE_COUNT = 45;
+        const particles = [];
+
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            particles.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                r: Math.random() * 1.5 + 0.3,
+                vx: (Math.random() - 0.5) * 0.15,
+                vy: (Math.random() - 0.5) * 0.15 - 0.08,
+                alpha: Math.random() * 0.3 + 0.05,
+                alphaDir: (Math.random() - 0.5) * 0.003,
+                pulse: Math.random() * Math.PI * 2,
+            });
+        }
+
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function drawParticles() {
+            if (prefersReduced) return;
+            ctx.clearRect(0, 0, W, H);
+
+            for (const p of particles) {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.pulse += 0.015;
+                p.alpha += p.alphaDir;
+
+                if (p.alpha <= 0.03 || p.alpha >= 0.35) p.alphaDir *= -1;
+                p.alpha = Math.max(0.03, Math.min(0.35, p.alpha));
+
+                if (p.x < -10) p.x = W + 10;
+                if (p.x > W + 10) p.x = -10;
+                if (p.y < -10) p.y = H + 10;
+                if (p.y > H + 10) p.y = -10;
+
+                const r = Math.max(0.1, p.r + Math.sin(p.pulse) * 0.4);
+                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3);
+                grad.addColorStop(0, 'rgba(212,175,55,' + p.alpha + ')');
+                grad.addColorStop(1, 'rgba(212,175,55,0)');
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, r * 3, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+
+            requestAnimationFrame(drawParticles);
+        }
+
+        drawParticles();
+    </script>
+</body>
+  </html>
